@@ -22,6 +22,10 @@ MAIN_IDX_TEMPL = jinja2.Template('''
 </head>
 <body class="idx main">
     <h1>{{ title }}</h1>
+
+    <a href="../{{ zip_name }}">Download Everything (zip)</a>,<br/>
+    <a href="pages.html">Overall Page List</a>
+
     <h2>Books</h2>
     <ul>
         {% for book, idx, pages, cats in books %}
@@ -35,9 +39,6 @@ MAIN_IDX_TEMPL = jinja2.Template('''
         </li>
         {% endfor %}
     </ul>
-
-    <h2>Overall</h2>
-    <a href="pages.html">Overall Page List</a>
 
     <h2>Entries</h2>
     <ul class="entries">
@@ -54,7 +55,7 @@ CAT_PAGE_LIST_TEMPL = jinja2.Template('''
 <head>
     <meta charset="UTF-8">
     <title>{{ title }}: {{ cat }} in {{ book }}</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="../style.css">
 </head>
 <body class="pglist book">
     <h1>{{ cat }} in {{ book }}</h1>
@@ -73,7 +74,7 @@ BOOK_PAGE_LIST_TEMPL = jinja2.Template('''
 <head>
     <meta charset="UTF-8">
     <title>{{ title }}: Page listing of {{ book }}</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="../style.css">
 </head>
 <body class="pglist book">
     <h1>Pages of {{ book }}</h1>
@@ -96,7 +97,7 @@ MAIN_PAGE_LIST_TEMPL = jinja2.Template('''
 </head>
 <body class="pglist main">
     <h1>{{ title }}: Overall Page Listing</h1>
-    <a href="../index.html">Home</a>
+    <a href="index.html">Home</a>
     <h2>Books</h2>
     <ul class="contents">
         {% for book, pages in books %}
@@ -106,7 +107,7 @@ MAIN_PAGE_LIST_TEMPL = jinja2.Template('''
 
     <h2>Pages</h2>
     {% for book, pages in books %}
-        <h1 id="pages-{{ parse.quote(book) }}">Pages of {{ book }}</h1>
+        <h4 id="pages-{{ parse.quote(book) }}">{{ book }}</h4>
         <ol class="pglist">
         {% for pgnum, thumb, link in pages %}
             <li value="{{ pgnum }}"><a href="{{ link }}"><img src="{{ thumb }}" alt="Page {{ pgnum }}"/></a></li>
@@ -122,7 +123,7 @@ BOOK_IDX_TEMPL = jinja2.Template('''
 <head>
     <meta charset="UTF-8">
     <title>{{ title }}: Index of {{ book }}</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="../style.css">
 </head>
 <body class="idx book">
     <h1>Index of {{ book }}</h1>
@@ -142,28 +143,126 @@ PAGE_TEMPL = jinja2.Template('''
 <head>
     <meta charset="UTF-8">
     <title>{{ title }}: Page {{ pgnum }} of {{ book }}</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="../../style.css">
 </head>
 <body class="page">
-
-    <h2>Page {{ pgnum }} of {{ book }}{{ " ("+cat+")" if cat }}</h2>
-    <a href="../../index.html">Home</a>, <a href="{{ page_list }}">Pages</a>, <a href="{{ index }}">Index</a>
+    <h1>{{ book }}: {{ pgnum }}{{ " ("+cat+")" if cat }}</h1>
+    {% if titles %}
+    <div>
     {% for title in titles %}
-        <h4>{{ title }}</h4>
+       {{ title }}{{ "," if not loop.last }}
     {% endfor %}
-
-    {% if has_prev %}
-    <a href="{{ prev_link }}" title="Previous page: {{ prev_num }}">Previous <img src="{{ prev_img }}" alt="Page {{ prev_num }} of {{ book }}"></a>
+    </div>
     {% endif %}
+    <div class="links"><a href="../../index.html">Home</a>, <a href="{{ page_list }}">Pages</a>, <a href="{{ index }}">Index</a></div>
 
-    <a href="{{ img }}"><img src="{{ img }}" alt="Page {{ pgnum }} of {{ book }}"></a>
+    <div class="viewer">
+        {% if has_prev %}
+        <a class="nav prev" href="{{ prev_link }}" title="Previous page: {{ prev_num }}">
+            <img src="{{ prev_img }}" alt="Page {{ prev_num }} of {{ book }}">
+            <div><span>Previous</span></div>
+        </a>
+        {% endif %}
 
-    {% if has_next %}
-    <a href="{{ next_link }}" title="Next page: {{ next_num }}">Next <img src="{{ next_img }}" alt="Page {{ next_num }} of {{ book }}"></a>
-    {% endif %}
+        <a class="img" href="{{ img }}"><img src="{{ img }}" alt="Page {{ pgnum }} of {{ book }}"></a>
 
+        {% if has_next %}
+        <a src="{{ next_img }}" class="nav prev" href="{{ next_link }}" title="Next page: {{ next_num }}">
+            <img src="{{ next_img }}" alt="Page {{ next_num }} of {{ book }}">
+            <div><span>Next<span></div>
+        </a>
+        {% endif %}
+    </div>
 </body>
 ''')
+
+STYLE_CSS = '''
+body {
+    font-family: Montserrat, sans-serif;
+}
+
+h1 {
+    font-size: 32pt;
+}
+
+h2 {
+    margin-top: 2em;
+    font-size: 24pt;
+}
+
+h4 {
+    margin-top: 3em;
+    font-size: 16pt;
+}
+
+ol.pglist {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+}
+
+ol.pglist li {
+    margin: 10px;
+    width: 100px;
+    text-align: center;
+}
+
+ol.pglist li::before {
+    content: attr(value);
+    display: block;
+    text-align: center;
+    width: 100%;
+    font-weight: bold;
+}
+
+body.page .img img {
+    max-width: calc(100vw - 15em);
+    max-height: calc(100vh - 8em);
+}
+
+body.page h1 {
+    margin-bottom: .3em;
+}
+
+body.page .viewer {
+    display: flex;
+    align-items: center;
+}
+
+body.page .nav {
+    margin: 10px;
+    position: relative;
+    vertical-align: top;
+    flex-grow: 0;
+}
+
+body.page .nav div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body.page .links {
+    margin-bottom: 10px;
+}
+
+a, a:hover, a:active, a:link {
+    text-decoration: none;
+    color: red;
+    font-weight: bold;
+}
+
+a:visited {
+    color: #800;
+}
+'''
 
 imgname = lambda prefix, pgnum, orig_fn: f'ar-{prefix.lower()}-{pgnum:04}{path.splitext(orig_fn)[1].lower()}'
 imgpath  = lambda prefix, pgnum, orig_fn: path.join('images', imgname(prefix, pgnum, orig_fn))
@@ -173,10 +272,15 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--database', default='kochbuch.sqlite3', help='Metadata db path, default: kochbuch.sqlite3')
-    parser.add_argument('-t', '--title', default='Image Archive', help='Product title (for headings and file names)')
+    parser.add_argument('-o', '--out', type=str, default=None, help='Output zip file. This or --title must be given.')
     parser.add_argument('img_path', default='.', nargs='?', help='Base directory of image files')
-    parser.add_argument('out.zip', default='out', nargs='?', help='Output file')
+    parser.add_argument('-t', '--title', default='Image Archive', help='Product title (for headings and file names)')
     args = parser.parse_args()
+
+    if not args.out and not args.title:
+        raise ValueError('At least one of --out and --title must be given.')
+
+    zip_name = args.out or f'{args.title}.zip'
 
     db = sqlite3.connect(args.database)
     db.execute('PRAGMA foreign_keys = ON')
@@ -191,25 +295,22 @@ if __name__ == '__main__':
         pics[hash] = pic
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        ### FIXME debug
-        out = '/tmp/tagomatic'
-        #shutil.rmtree(out) FIXME DEBUG
-        #os.mkdir(out) FIXME DEBUG
+        out = path.join(tmpdir, args.title)
+        os.mkdir(out)
 
         print('Copying images')
-        # os.mkdir(path.join(out, 'images')) FIXME DEBUG
+        os.mkdir(path.join(out, 'images'))
         for hash, prefix, pgnum, orig_fn in db.execute('SELECT sha3, prefix, pgnum, filename FROM pics'):
             dst = path.join(out, imgpath(prefix, pgnum, orig_fn))
-            # shutil.copy(pics[hash], dst) FIXME DEBUG
+            shutil.copy(pics[hash], dst)
             pics[hash] = dst
 
         print('Generating Thumbnails')
         thumb_path = path.join(out, 'thumbs')
-        # os.mkdir(thumb_path) FIXME DEBUG
-        # subprocess.check_call([ FIXME DEBUG
-        #    'mogrify', '-format', 'png', '-path', thumb_path, '-thumbnail', '100x100',
-        #    *pics.values()
-        #    ])
+        os.mkdir(thumb_path)
+        subprocess.check_call([
+            'mogrify', '-format', 'png', '-path', thumb_path, '-thumbnail', '100x100',
+            *pics.values() ])
 
         print('Writing indices')
         books = [ book for book, in db.execute('SELECT DISTINCT book FROM pics ORDER BY book') ]
@@ -217,7 +318,7 @@ if __name__ == '__main__':
         book_pages = []
         for book in books:
             book_dir = book
-            # os.mkdir(path.join(out, book_dir)) FIXME DEBUG
+            os.mkdir(path.join(out, book_dir))
 
             entries = [ (value, f'pages/pg{pgnum}.html') for value, pgnum in db.execute(
                     '''SELECT value, pgnum FROM pic_tags
@@ -259,7 +360,7 @@ if __name__ == '__main__':
             book_indices.append((book, idx_fn, pages_fn, cats))
 
             page_dir = path.join(book_dir, 'pages')
-            # os.mkdir(path.join(out, page_dir)) FIXME DEBUG
+            os.mkdir(path.join(out, page_dir))
             for prev, (pgnum, _thumb, img, link, hash), next in zip(
                     [None] + pages[:-1],
                     pages,
@@ -302,12 +403,17 @@ if __name__ == '__main__':
                 WHERE pic_tags.tag=(SELECT id FROM tags WHERE name="title")
                 AND value NOT NULL AND value != ""
                 ORDER BY value''') ]
+
         with open(path.join(out, f'index.html'), 'w') as f:
-            f.write(MAIN_IDX_TEMPL.render(title=args.title, entries=entries, books=book_indices))
+            f.write(MAIN_IDX_TEMPL.render(title=args.title, entries=entries, books=book_indices, zip_name=zip_name))
 
         with open(path.join(out, f'pages.html'), 'w') as f:
             f.write(MAIN_PAGE_LIST_TEMPL.render(title=args.title, books=book_pages, parse=parse))
 
-    print('Done.')
+        with open(path.join(out, 'style.css'), 'w') as f:
+            f.write(STYLE_CSS)
 
+        print('Compressing output')
+        subprocess.check_call(['zip', '-r', path.abspath(zip_name), args.title], cwd=tmpdir)
+        print('Done.')
 
